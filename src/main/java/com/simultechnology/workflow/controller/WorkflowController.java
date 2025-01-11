@@ -1,8 +1,11 @@
 package com.simultechnology.workflow.controller;
 
 import com.simultechnology.workflow.service.WorkflowService;
+import com.simultechnology.workflow.dto.WorkflowDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/workflow")
@@ -11,6 +14,11 @@ public class WorkflowController {
 
     public WorkflowController(WorkflowService workflowService) {
         this.workflowService = workflowService;
+    }
+
+    @GetMapping("/list")
+    public ResponseEntity<List<WorkflowDTO>> listWorkflows() {
+        return ResponseEntity.ok(workflowService.getAllWorkflows());
     }
 
     @PostMapping
