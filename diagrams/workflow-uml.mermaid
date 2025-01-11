@@ -33,11 +33,45 @@ classDiagram
         +getStateName() String
     }
     
+    class Employee {
+        -Long id
+        -String employeeCode
+        -String name
+        -String department
+        -String email
+        -String position
+    }
+    
+    class TaskExecution {
+        -Long id
+        -String taskName
+        -String taskDescription
+        -LocalDateTime startTime
+        -LocalDateTime endTime
+        -String status
+        -String comments
+    }
+    
+    class Workflow {
+        -String id
+        -String currentState
+        -String title
+        -String description
+        -LocalDateTime createdAt
+        -LocalDateTime updatedAt
+        +onCreate()
+        +onUpdate()
+    }
+    
     class WorkflowService {
-        -Map~String, WorkflowContext~ workflows
-        +createWorkflow() String
-        +processWorkflow(String workflowId)
-        +getWorkflowState(String workflowId) String
+        -Map<String, WorkflowContext> workflows
+        -WorkflowRepository workflowRepository
+        -EmployeeRepository employeeRepository
+        -TaskExecutionRepository taskExecutionRepository
+        +createWorkflow(Long creatorId) String
+        +assignTask(CreateTaskRequest request)
+        +completeTask(Long taskId, String comments)
+        +getAllWorkflows(Pageable pageable) Page<WorkflowDTO>
     }
     
     class WorkflowController {
@@ -45,11 +79,43 @@ classDiagram
         +createWorkflow() ResponseEntity
         +processWorkflow(String workflowId) ResponseEntity
         +getWorkflowState(String workflowId) ResponseEntity
+        +listWorkflows(Pageable pageable) ResponseEntity
+    }
+
+    class EmployeeController {
+        -EmployeeService employeeService
+        +getAllEmployees() ResponseEntity
+        +createEmployee(EmployeeDTO dto) ResponseEntity
+    }
+
+    class TaskController {
+        -WorkflowService workflowService
+        +assignTask(CreateTaskRequest request) ResponseEntity
+        +completeTask(Long taskId, String comments) ResponseEntity
+    }
+
+    class WorkflowDTO {
+        -String id
+        -String state
+        -String title
+        -String description
+        -EmployeeDTO assignee
+        -EmployeeDTO creator
+        -LocalDateTime createdAt
+        -LocalDateTime updatedAt
+        -List<StateTransitionDTO> transitions
+        -List<TaskExecutionDTO> taskExecutions
     }
 
     State <|-- InitialState
     State <|-- InProgressState
     State <|-- CompletedState
     WorkflowContext o-- State
+    Workflow o-- Employee : creator
+    Workflow o-- Employee : assignee
+    Workflow o-- TaskExecution : tasks
+    TaskExecution o-- Employee
     WorkflowService o-- WorkflowContext
     WorkflowController o-- WorkflowService
+    EmployeeController o-- EmployeeService
+    TaskController o-- WorkflowService
