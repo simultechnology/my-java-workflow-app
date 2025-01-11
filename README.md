@@ -92,7 +92,7 @@ mvn clean install
 mvn spring-boot:run
 ```
 
-アプリケーションは デフォルトで http://localhost:8080 で起動します。
+アプリケーションは デフォルトで http://localhost:9480 で起動します。
 
 ## API仕様
 
@@ -136,17 +136,17 @@ GET /api/workflow/{workflowId}/state
 
 1. 新規ワークフロー作成:
 ```bash
-curl -X POST http://localhost:8080/api/workflow
+curl -X POST http://localhost:9480/api/workflow
 ```
 
 2. ワークフロー処理の実行:
 ```bash
-curl -X POST http://localhost:8080/api/workflow/{workflowId}/process
+curl -X POST http://localhost:9480/api/workflow/{workflowId}/process
 ```
 
 3. ワークフローの状態取得:
 ```bash
-curl -X GET http://localhost:8080/api/workflow/{workflowId}/state
+curl -X GET http://localhost:9480/api/workflow/{workflowId}/state
 ```
 
 ## 状態遷移の仕組み
@@ -195,7 +195,7 @@ curl -X GET http://localhost:8080/api/workflow/{workflowId}/state
 
 1. アプリケーションが起動しない
    - Javaのバージョンが17以上であることを確認
-   - ポート8080が使用可能であることを確認
+   - ポート9480が使用可能であることを確認
 
 2. ワークフローIDが見つからない
    - 正しいUUIDが指定されているか確認
