@@ -7,7 +7,13 @@ import {
 } from './ui/dialog';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { Select } from './ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './ui/select';
 import { Label } from './ui/label';
 import { useToast } from './ui/use-toast';
 import { workflowApi } from '../services/api';
@@ -97,19 +103,18 @@ export function CreateWorkflowDialog({ open, onClose, onSuccess }) {
 
           <div className="space-y-2">
             <Label htmlFor="employee">Assignee</Label>
-            <select
-              id="employee"
-              value={selectedEmployee}
-              onChange={(e) => setSelectedEmployee(e.target.value)}
-              className="w-full p-2 border rounded-md"
-              required
-            >
-              {employees.map((employee) => (
-                <option key={employee.id} value={employee.id}>
-                  {employee.name} ({employee.department})
-                </option>
-              ))}
-            </select>
+            <Select value={selectedEmployee} onValueChange={setSelectedEmployee}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select employee" />
+              </SelectTrigger>
+              <SelectContent>
+                {employees.map((employee) => (
+                  <SelectItem key={employee.id} value={employee.id.toString()}>
+                    {employee.name} ({employee.department})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="flex justify-end space-x-2">
