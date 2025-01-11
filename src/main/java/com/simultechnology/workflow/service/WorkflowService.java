@@ -3,6 +3,7 @@ package com.simultechnology.workflow.service;
 import com.simultechnology.workflow.dto.*;
 import com.simultechnology.workflow.entity.*;
 import com.simultechnology.workflow.repository.*;
+import com.simultechnology.workflow.state.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -51,6 +52,8 @@ public class WorkflowService {
         workflow.setCurrentState("INITIAL");
         workflow.setCreator(creator);
         workflow.setAssignee(creator);
+        workflow.setTitle("New Workflow");
+        workflow.setDescription("Workflow created by " + creator.getName());
         
         workflowRepository.save(workflow);
         activeWorkflows.put(workflowId, context);
@@ -90,6 +93,17 @@ public class WorkflowService {
         task.setComments(comments);
         
         taskExecutionRepository.save(task);
+
+        // タスクが完了したら、ワークフローの状態も更新
+        Workflow workflow = task.getWorkflow();
+        if (workflow != null) {
+            WorkflowContext context = activeWorkflows.get(workflow.getId());
+            if (context != null) {
+                context.process();
+                workflow.setCurrentState(context.getCurrentState().getStateName());
+                workflowRepository.save(workflow);
+            }
+        }
     }
 
     @Transactional
