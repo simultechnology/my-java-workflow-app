@@ -1,0 +1,48 @@
+stateDiagram-v2
+    [*] --> DRAFT: 作成
+    DRAFT --> PENDING_APPROVAL: 申請
+    PENDING_APPROVAL --> IN_REVIEW: 承認
+    PENDING_APPROVAL --> REJECTED: 否認
+    IN_REVIEW --> IN_PROGRESS: レビュー完了
+    IN_REVIEW --> REJECTED: レビュー否認
+    REJECTED --> DRAFT: 再申請
+    IN_PROGRESS --> ON_HOLD: 保留
+    IN_PROGRESS --> COMPLETED: 完了
+    ON_HOLD --> IN_PROGRESS: 再開
+    ON_HOLD --> CANCELLED: 中止
+    COMPLETED --> [*]
+    CANCELLED --> [*]
+    
+    note right of DRAFT
+        作成直後の状態
+        内容の編集が可能
+    end note
+    
+    note right of PENDING_APPROVAL
+        上長による承認待ち
+    end note
+    
+    note right of IN_REVIEW
+        内容の確認・レビュー中
+    end note
+    
+    note right of REJECTED
+        承認・レビューで否認
+        修正して再申請可能
+    end note
+    
+    note right of IN_PROGRESS
+        作業実行中
+    end note
+    
+    note right of ON_HOLD
+        一時停止状態
+    end note
+    
+    note right of COMPLETED
+        すべての作業が完了
+    end note
+    
+    note right of CANCELLED
+        ワークフロー中止
+    end note
