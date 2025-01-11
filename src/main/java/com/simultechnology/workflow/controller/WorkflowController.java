@@ -1,5 +1,6 @@
 package com.simultechnology.workflow.controller;
 
+import com.simultechnology.workflow.dto.CreateWorkflowRequest;
 import com.simultechnology.workflow.dto.WorkflowDTO;
 import com.simultechnology.workflow.service.WorkflowService;
 import org.springframework.data.domain.Page;
@@ -22,8 +23,12 @@ public class WorkflowController {
     }
 
     @PostMapping
-    public ResponseEntity<String> createWorkflow(@RequestParam Long creatorId) {
-        String workflowId = workflowService.createWorkflow(creatorId);
+    public ResponseEntity<String> createWorkflow(@RequestBody CreateWorkflowRequest request) {
+        String workflowId = workflowService.createWorkflow(
+            request.getCreatorId(), 
+            request.getTitle(), 
+            request.getDescription()
+        );
         return ResponseEntity.ok(workflowId);
     }
 
