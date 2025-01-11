@@ -1,7 +1,7 @@
 package com.simultechnology.workflow.controller;
 
-import com.simultechnology.workflow.service.WorkflowService;
 import com.simultechnology.workflow.dto.WorkflowDTO;
+import com.simultechnology.workflow.service.WorkflowService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -21,14 +21,9 @@ public class WorkflowController {
         return ResponseEntity.ok(workflowService.getAllWorkflows(pageable));
     }
 
-    @GetMapping("/{workflowId}")
-    public ResponseEntity<WorkflowDTO> getWorkflowDetails(@PathVariable String workflowId) {
-        return ResponseEntity.ok(workflowService.getWorkflowDetails(workflowId));
-    }
-
     @PostMapping
-    public ResponseEntity<String> createWorkflow() {
-        String workflowId = workflowService.createWorkflow();
+    public ResponseEntity<String> createWorkflow(@RequestParam Long creatorId) {
+        String workflowId = workflowService.createWorkflow(creatorId);
         return ResponseEntity.ok(workflowId);
     }
 
@@ -36,6 +31,12 @@ public class WorkflowController {
     public ResponseEntity<Void> processWorkflow(@PathVariable String workflowId) {
         workflowService.processWorkflow(workflowId);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/{workflowId}")
+    public ResponseEntity<WorkflowDTO> getWorkflowDetails(@PathVariable String workflowId) {
+        WorkflowDTO workflow = workflowService.getWorkflowDetails(workflowId);
+        return ResponseEntity.ok(workflow);
     }
 
     @GetMapping("/search")

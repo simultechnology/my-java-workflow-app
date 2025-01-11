@@ -9,6 +9,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class WorkflowService {
@@ -16,6 +19,7 @@ public class WorkflowService {
     private final StateTransitionRepository stateTransitionRepository;
     private final EmployeeRepository employeeRepository;
     private final TaskExecutionRepository taskExecutionRepository;
+    private final Map<String, WorkflowContext> activeWorkflows = new HashMap<>();
 
     public WorkflowService(WorkflowRepository workflowRepository, 
                          StateTransitionRepository stateTransitionRepository,
@@ -27,19 +31,30 @@ public class WorkflowService {
         this.taskExecutionRepository = taskExecutionRepository;
     }
 
+    @Transactional(readOnly = true)
+    public Page<WorkflowDTO> getAllWorkflows(Pageable pageable) {
+        return workflowRepository.findAll(pageable)
+            .map(this::convertToDTO);
+    }
+
     @Transactional
     public String createWorkflow(Long creatorId) {
         Employee creator = employeeRepository.findById(creatorId)
             .orElseThrow(() -> new RuntimeException("Employee not found"));
 
+        String workflowId = java.util.UUID.randomUUID().toString();
+        WorkflowContext context = new WorkflowContext(workflowId);
+        context.setState(new InitialState());
+
         Workflow workflow = new Workflow();
-        workflow.setId(java.util.UUID.randomUUID().toString());
+        workflow.setId(workflowId);
         workflow.setCurrentState("INITIAL");
         workflow.setCreator(creator);
         workflow.setAssignee(creator);
         
         workflowRepository.save(workflow);
-        return workflow.getId();
+        activeWorkflows.put(workflowId, context);
+        return workflowId;
     }
 
     @Transactional
@@ -77,5 +92,93 @@ public class WorkflowService {
         taskExecutionRepository.save(task);
     }
 
-    // ... 他のメソッド
+    @Transactional
+    public void processWorkflow(String workflowId) {
+        WorkflowContext context = activeWorkflows.get(workflowId);
+        if (context != null) {
+            String oldState = context.getCurrentState().getStateName();
+            context.process();
+            String newState = context.getCurrentState().getStateName();
+
+            Workflow workflow = workflowRepository.findById(workflowId)
+                .orElseThrow(() -> new RuntimeException("Workflow not found"));
+            
+            StateTransition transition = new StateTransition();
+            transition.setWorkflow(workflow);
+            transition.setFromState(oldState);
+            transition.setToState(newState);
+            
+            workflow.setCurrentState(newState);
+            workflow.getStateTransitions().add(transition);
+            
+            workflowRepository.save(workflow);
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public WorkflowDTO getWorkflowDetails(String workflowId) {
+        return workflowRepository.findById(workflowId)
+            .map(this::convertToDTO)
+            .orElse(null);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<WorkflowDTO> searchWorkflows(String state, Pageable pageable) {
+        return workflowRepository.findByCurrentStateContainingIgnoreCase(state, pageable)
+            .map(this::convertToDTO);
+    }
+
+    private WorkflowDTO convertToDTO(Workflow workflow) {
+        WorkflowDTO dto = new WorkflowDTO();
+        dto.setId(workflow.getId());
+        dto.setState(workflow.getCurrentState());
+        dto.setTitle(workflow.getTitle());
+        dto.setDescription(workflow.getDescription());
+        dto.setCreatedAt(workflow.getCreatedAt());
+        dto.setUpdatedAt(workflow.getUpdatedAt());
+
+        if (workflow.getCreator() != null) {
+            EmployeeDTO creatorDTO = new EmployeeDTO();
+            creatorDTO.setId(workflow.getCreator().getId());
+            creatorDTO.setName(workflow.getCreator().getName());
+            creatorDTO.setDepartment(workflow.getCreator().getDepartment());
+            dto.setCreator(creatorDTO);
+        }
+
+        if (workflow.getAssignee() != null) {
+            EmployeeDTO assigneeDTO = new EmployeeDTO();
+            assigneeDTO.setId(workflow.getAssignee().getId());
+            assigneeDTO.setName(workflow.getAssignee().getName());
+            assigneeDTO.setDepartment(workflow.getAssignee().getDepartment());
+            dto.setAssignee(assigneeDTO);
+        }
+
+        dto.setTaskExecutions(workflow.getTaskExecutions().stream()
+            .map(this::convertToTaskDTO)
+            .collect(Collectors.toList()));
+
+        return dto;
+    }
+
+    private TaskExecutionDTO convertToTaskDTO(TaskExecution task) {
+        TaskExecutionDTO dto = new TaskExecutionDTO();
+        dto.setId(task.getId());
+        dto.setWorkflowId(task.getWorkflow().getId());
+        dto.setTaskName(task.getTaskName());
+        dto.setTaskDescription(task.getTaskDescription());
+        dto.setStartTime(task.getStartTime());
+        dto.setEndTime(task.getEndTime());
+        dto.setStatus(task.getStatus());
+        dto.setComments(task.getComments());
+
+        if (task.getEmployee() != null) {
+            EmployeeDTO employeeDTO = new EmployeeDTO();
+            employeeDTO.setId(task.getEmployee().getId());
+            employeeDTO.setName(task.getEmployee().getName());
+            employeeDTO.setDepartment(task.getEmployee().getDepartment());
+            dto.setEmployee(employeeDTO);
+        }
+
+        return dto;
+    }
 }
