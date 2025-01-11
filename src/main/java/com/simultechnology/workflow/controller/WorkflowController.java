@@ -2,10 +2,10 @@ package com.simultechnology.workflow.controller;
 
 import com.simultechnology.workflow.service.WorkflowService;
 import com.simultechnology.workflow.dto.WorkflowDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/workflow")
@@ -17,8 +17,13 @@ public class WorkflowController {
     }
 
     @GetMapping("/list")
-    public ResponseEntity<List<WorkflowDTO>> listWorkflows() {
-        return ResponseEntity.ok(workflowService.getAllWorkflows());
+    public ResponseEntity<Page<WorkflowDTO>> listWorkflows(Pageable pageable) {
+        return ResponseEntity.ok(workflowService.getAllWorkflows(pageable));
+    }
+
+    @GetMapping("/{workflowId}")
+    public ResponseEntity<WorkflowDTO> getWorkflowDetails(@PathVariable String workflowId) {
+        return ResponseEntity.ok(workflowService.getWorkflowDetails(workflowId));
     }
 
     @PostMapping
@@ -33,9 +38,10 @@ public class WorkflowController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/{workflowId}/state")
-    public ResponseEntity<String> getWorkflowState(@PathVariable String workflowId) {
-        String state = workflowService.getWorkflowState(workflowId);
-        return ResponseEntity.ok(state);
+    @GetMapping("/search")
+    public ResponseEntity<Page<WorkflowDTO>> searchWorkflows(
+            @RequestParam String state,
+            Pageable pageable) {
+        return ResponseEntity.ok(workflowService.searchWorkflows(state, pageable));
     }
 }
