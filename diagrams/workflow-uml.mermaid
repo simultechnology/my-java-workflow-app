@@ -1,0 +1,55 @@
+classDiagram
+    class State {
+        <<interface>>
+        +process(WorkflowContext context)
+        +getStateName() String
+    }
+    
+    class WorkflowContext {
+        -State currentState
+        -String workflowId
+        -Object data
+        +WorkflowContext(String workflowId)
+        +process()
+        +setState(State state)
+        +getCurrentState() State
+        +getWorkflowId() String
+        +getData() Object
+        +setData(Object data)
+    }
+    
+    class InitialState {
+        +process(WorkflowContext context)
+        +getStateName() String
+    }
+    
+    class InProgressState {
+        +process(WorkflowContext context)
+        +getStateName() String
+    }
+    
+    class CompletedState {
+        +process(WorkflowContext context)
+        +getStateName() String
+    }
+    
+    class WorkflowService {
+        -Map~String, WorkflowContext~ workflows
+        +createWorkflow() String
+        +processWorkflow(String workflowId)
+        +getWorkflowState(String workflowId) String
+    }
+    
+    class WorkflowController {
+        -WorkflowService workflowService
+        +createWorkflow() ResponseEntity
+        +processWorkflow(String workflowId) ResponseEntity
+        +getWorkflowState(String workflowId) ResponseEntity
+    }
+
+    State <|-- InitialState
+    State <|-- InProgressState
+    State <|-- CompletedState
+    WorkflowContext o-- State
+    WorkflowService o-- WorkflowContext
+    WorkflowController o-- WorkflowService
