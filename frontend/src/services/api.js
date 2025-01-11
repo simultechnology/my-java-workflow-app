@@ -1,15 +1,14 @@
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:9480';
 
 export const workflowApi = {
-  // ワークフロー関連
-  createWorkflow: async (creatorId) => {
+  createWorkflow: async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/workflow`, {
+      // 一時的に固定のcreatorId=1を使用
+      const response = await fetch(`${API_BASE_URL}/api/workflow?creatorId=1`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ creatorId }),
+          'Content-Type': 'application/json'
+        }
       });
       if (!response.ok) throw new Error('Failed to create workflow');
       return response.text();
@@ -43,7 +42,18 @@ export const workflowApi = {
     }
   },
 
-  // 社員関連
+  getWorkflowDetails: async (workflowId) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/workflow/${workflowId}`);
+      if (!response.ok) throw new Error('Failed to fetch workflow details');
+      return response.json();
+    } catch (error) {
+      console.error('Get workflow details error:', error);
+      throw error;
+    }
+  },
+
+  // Employee関連のAPI
   getEmployees: async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/employees`);
@@ -72,7 +82,7 @@ export const workflowApi = {
     }
   },
 
-  // タスク関連
+  // Task関連のAPI
   assignTask: async (taskData) => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/tasks/assign`, {
@@ -91,12 +101,8 @@ export const workflowApi = {
 
   completeTask: async (taskId, comments) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/tasks/${taskId}/complete`, {
+      const response = await fetch(`${API_BASE_URL}/api/tasks/${taskId}/complete?comments=${encodeURIComponent(comments)}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ comments }),
       });
       if (!response.ok) throw new Error('Failed to complete task');
     } catch (error) {
