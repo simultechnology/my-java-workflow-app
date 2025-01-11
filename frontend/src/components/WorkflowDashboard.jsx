@@ -18,13 +18,14 @@ export function WorkflowDashboard() {
     try {
       setLoading(true);
       const data = await workflowApi.getWorkflows();
-      setWorkflows(data);
+      setWorkflows(data.content || []); // Page<Workflow>のcontentフィールドを取得
     } catch (error) {
       toast({
         title: 'Error',
         description: 'Failed to load workflows',
         variant: 'destructive',
       });
+      setWorkflows([]); // エラー時は空配列をセット
     } finally {
       setLoading(false);
     }

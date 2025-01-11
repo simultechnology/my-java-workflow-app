@@ -2,29 +2,50 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:948
 
 export const workflowApi = {
   createWorkflow: async () => {
-    const response = await fetch(`${API_BASE_URL}/api/workflow`, {
-      method: 'POST',
-    });
-    if (!response.ok) throw new Error('Failed to create workflow');
-    return response.text();
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/workflow`, {
+        method: 'POST',
+      });
+      if (!response.ok) throw new Error('Failed to create workflow');
+      return response.text();
+    } catch (error) {
+      console.error('Create workflow error:', error);
+      throw error;
+    }
   },
 
   getWorkflows: async () => {
-    const response = await fetch(`${API_BASE_URL}/api/workflow/list`);
-    if (!response.ok) throw new Error('Failed to fetch workflows');
-    return response.json();
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/workflow/list`);
+      if (!response.ok) throw new Error('Failed to fetch workflows');
+      const data = await response.json();
+      return data; // Spring Boot のページネーションレスポンスをそのまま返す
+    } catch (error) {
+      console.error('Get workflows error:', error);
+      throw error;
+    }
   },
 
   processWorkflow: async (workflowId) => {
-    const response = await fetch(`${API_BASE_URL}/api/workflow/${workflowId}/process`, {
-      method: 'POST',
-    });
-    if (!response.ok) throw new Error('Failed to process workflow');
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/workflow/${workflowId}/process`, {
+        method: 'POST',
+      });
+      if (!response.ok) throw new Error('Failed to process workflow');
+    } catch (error) {
+      console.error('Process workflow error:', error);
+      throw error;
+    }
   },
 
   getWorkflowDetails: async (workflowId) => {
-    const response = await fetch(`${API_BASE_URL}/api/workflow/${workflowId}`);
-    if (!response.ok) throw new Error('Failed to fetch workflow details');
-    return response.json();
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/workflow/${workflowId}`);
+      if (!response.ok) throw new Error('Failed to fetch workflow details');
+      return response.json();
+    } catch (error) {
+      console.error('Get workflow details error:', error);
+      throw error;
+    }
   },
 };
