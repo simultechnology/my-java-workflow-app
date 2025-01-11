@@ -5,6 +5,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { useToast } from './ui/use-toast';
 import { PlusCircle, Search } from 'lucide-react';
+import { workflowApi } from '../services/api';
 
 export function WorkflowDashboard() {
   const [workflows, setWorkflows] = useState([]);
@@ -16,9 +17,7 @@ export function WorkflowDashboard() {
   const fetchWorkflows = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/workflow/list');
-      if (!response.ok) throw new Error('Failed to fetch workflows');
-      const data = await response.json();
+      const data = await workflowApi.getWorkflows();
       setWorkflows(data);
     } catch (error) {
       toast({
@@ -33,10 +32,7 @@ export function WorkflowDashboard() {
 
   const createWorkflow = async () => {
     try {
-      const response = await fetch('/api/workflow', {
-        method: 'POST',
-      });
-      if (!response.ok) throw new Error('Failed to create workflow');
+      await workflowApi.createWorkflow();
       await fetchWorkflows();
       toast({
         title: 'Success',

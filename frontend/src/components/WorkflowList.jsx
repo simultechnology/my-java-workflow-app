@@ -10,16 +10,14 @@ import {
 import { Button } from './ui/button';
 import { PlayCircle, Info, RefreshCcw } from 'lucide-react';
 import { useToast } from './ui/use-toast';
+import { workflowApi } from '../services/api';
 
 export function WorkflowList({ workflows, loading, onSelect, onRefresh }) {
   const { toast } = useToast();
 
   const processWorkflow = async (workflowId) => {
     try {
-      const response = await fetch(`/api/workflow/${workflowId}/process`, {
-        method: 'POST',
-      });
-      if (!response.ok) throw new Error('Failed to process workflow');
+      await workflowApi.processWorkflow(workflowId);
       onRefresh();
       toast({
         title: 'Success',
