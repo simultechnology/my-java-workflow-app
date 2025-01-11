@@ -6,12 +6,11 @@ import org.springframework.stereotype.Component;
 public class CompletedState implements State {
     @Override
     public void process(WorkflowContext context) {
-        // Completed state processing logic
-        System.out.println("Processing in Completed State");
+        // 最終状態なので遷移なし
     }
 
     @Override
     public String getStateName() {
-        return "COMPLETED";
+        return WorkflowStatus.COMPLETED.name();
     }
 }
