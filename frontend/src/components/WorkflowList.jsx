@@ -62,24 +62,49 @@ export function WorkflowList({ workflows, loading, onSelect, onRefresh }) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>ID</TableHead>
+            <TableHead>Title</TableHead>
             <TableHead>Status</TableHead>
+            <TableHead>Assignee</TableHead>
+            <TableHead>Created By</TableHead>
             <TableHead>Created At</TableHead>
-            <TableHead>Updated At</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {workflows.map((workflow) => (
             <TableRow key={workflow.id}>
-              <TableCell className="font-medium">{workflow.id}</TableCell>
+              <TableCell>
+                <div>
+                  <div className="font-medium">{workflow.title || 'No Title'}</div>
+                  <div className="text-sm text-gray-500">{workflow.description}</div>
+                </div>
+              </TableCell>
               <TableCell>
                 <span className={`inline-block px-2 py-1 rounded text-sm ${getStatusColor(workflow.state)}`}>
                   {workflow.state}
                 </span>
               </TableCell>
+              <TableCell>
+                {workflow.assignee ? (
+                  <div>
+                    <div className="font-medium">{workflow.assignee.name}</div>
+                    <div className="text-sm text-gray-500">{workflow.assignee.department}</div>
+                  </div>
+                ) : (
+                  'Unassigned'
+                )}
+              </TableCell>
+              <TableCell>
+                {workflow.creator ? (
+                  <div>
+                    <div className="font-medium">{workflow.creator.name}</div>
+                    <div className="text-sm text-gray-500">{workflow.creator.department}</div>
+                  </div>
+                ) : (
+                  'Unknown'
+                )}
+              </TableCell>
               <TableCell>{new Date(workflow.createdAt).toLocaleString()}</TableCell>
-              <TableCell>{new Date(workflow.updatedAt).toLocaleString()}</TableCell>
               <TableCell>
                 <div className="flex gap-2">
                   <Button

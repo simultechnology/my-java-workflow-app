@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { WorkflowList } from './WorkflowList';
 import { WorkflowDetails } from './WorkflowDetails';
+import { CreateWorkflowDialog } from './CreateWorkflowDialog';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { useToast } from './ui/use-toast';
@@ -12,39 +13,23 @@ export function WorkflowDashboard() {
   const [selectedWorkflow, setSelectedWorkflow] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
   const { toast } = useToast();
 
   const fetchWorkflows = async () => {
     try {
       setLoading(true);
       const data = await workflowApi.getWorkflows();
-      setWorkflows(data.content || []); // Page<Workflow>のcontentフィールドを取得
+      setWorkflows(data.content || []);
     } catch (error) {
       toast({
         title: 'Error',
         description: 'Failed to load workflows',
         variant: 'destructive',
       });
-      setWorkflows([]); // エラー時は空配列をセット
+      setWorkflows([]);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const createWorkflow = async () => {
-    try {
-      await workflowApi.createWorkflow();
-      await fetchWorkflows();
-      toast({
-        title: 'Success',
-        description: 'New workflow created',
-      });
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to create workflow',
-        variant: 'destructive',
-      });
     }
   };
 
@@ -53,8 +38,10 @@ export function WorkflowDashboard() {
   }, []);
 
   const filteredWorkflows = workflows.filter(workflow =>
-    workflow.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    workflow.state.toLowerCase().includes(searchTerm.toLowerCase())
+    workflow.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    workflow.state?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    workflow.assignee?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    workflow.creator?.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -69,7 +56,7 @@ export function WorkflowDashboard() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <Button onClick={createWorkflow} className="flex items-center gap-2">
+        <Button onClick={() => setShowCreateDialog(true)} className="flex items-center gap-2">
           <PlusCircle className="h-4 w-4" />
           New Workflow
         </Button>
@@ -86,6 +73,12 @@ export function WorkflowDashboard() {
         workflow={selectedWorkflow}
         onClose={() => setSelectedWorkflow(null)}
         onRefresh={fetchWorkflows}
+      />
+
+      <CreateWorkflowDialog
+        open={showCreateDialog}
+        onClose={() => setShowCreateDialog(false)}
+        onSuccess={fetchWorkflows}
       />
     </div>
   );
