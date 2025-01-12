@@ -1,7 +1,6 @@
 package com.simultechnology.workflow.controller;
 
-import com.simultechnology.workflow.dto.CreateWorkflowRequest;
-import com.simultechnology.workflow.dto.WorkflowDTO;
+import com.simultechnology.workflow.dto.*;
 import com.simultechnology.workflow.service.WorkflowService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,37 +16,14 @@ public class WorkflowController {
         this.workflowService = workflowService;
     }
 
-    @GetMapping("/list")
-    public ResponseEntity<Page<WorkflowDTO>> listWorkflows(Pageable pageable) {
-        return ResponseEntity.ok(workflowService.getAllWorkflows(pageable));
-    }
-
-    @PostMapping
-    public ResponseEntity<String> createWorkflow(@RequestBody CreateWorkflowRequest request) {
-        String workflowId = workflowService.createWorkflow(
-            request.getCreatorId(), 
-            request.getTitle(), 
-            request.getDescription()
-        );
-        return ResponseEntity.ok(workflowId);
-    }
-
-    @PostMapping("/{workflowId}/process")
-    public ResponseEntity<Void> processWorkflow(@PathVariable String workflowId) {
-        workflowService.processWorkflow(workflowId);
+    @PostMapping("/{workflowId}/state")
+    public ResponseEntity<Void> updateWorkflowState(
+            @PathVariable String workflowId,
+            @RequestParam String action,
+            @RequestParam(required = false) String comment) {
+        workflowService.updateWorkflowState(workflowId, action, comment);
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/{workflowId}")
-    public ResponseEntity<WorkflowDTO> getWorkflowDetails(@PathVariable String workflowId) {
-        WorkflowDTO workflow = workflowService.getWorkflowDetails(workflowId);
-        return ResponseEntity.ok(workflow);
-    }
-
-    @GetMapping("/search")
-    public ResponseEntity<Page<WorkflowDTO>> searchWorkflows(
-            @RequestParam String state,
-            Pageable pageable) {
-        return ResponseEntity.ok(workflowService.searchWorkflows(state, pageable));
-    }
+    // 既存のエンドポイントは省略...
 }
