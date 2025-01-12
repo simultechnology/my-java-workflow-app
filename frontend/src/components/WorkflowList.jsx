@@ -8,9 +8,52 @@ import {
   TableRow,
 } from './ui/table';
 import { Button } from './ui/button';
-import { PlayCircle, Info, RefreshCcw } from 'lucide-react';
+import { 
+  PlayCircle, 
+  Info, 
+  RefreshCcw, 
+  PauseCircle,
+  CheckCircle2,
+  XCircle,
+  AlarmClock,
+  FileEdit
+} from 'lucide-react';
 import { useToast } from './ui/use-toast';
 import { workflowApi } from '../services/api';
+
+const STATUS_DISPLAY = {
+  'DRAFT': { text: '下書き', color: 'bg-gray-100 text-gray-800' },
+  'PENDING_APPROVAL': { text: '承認待ち', color: 'bg-yellow-100 text-yellow-800' },
+  'IN_REVIEW': { text: 'レビュー中', color: 'bg-purple-100 text-purple-800' },
+  'REJECTED': { text: '差し戻し', color: 'bg-red-100 text-red-800' },
+  'IN_PROGRESS': { text: '処理中', color: 'bg-blue-100 text-blue-800' },
+  'ON_HOLD': { text: '保留中', color: 'bg-orange-100 text-orange-800' },
+  'COMPLETED': { text: '完了', color: 'bg-green-100 text-green-800' },
+  'CANCELLED': { text: '取消', color: 'bg-gray-100 text-gray-800' }
+};
+
+const StatusIcon = ({ status }) => {
+  switch (status) {
+    case 'DRAFT':
+      return <FileEdit className="h-4 w-4" />;
+    case 'PENDING_APPROVAL':
+      return <AlarmClock className="h-4 w-4" />;
+    case 'IN_REVIEW':
+      return <Info className="h-4 w-4" />;
+    case 'REJECTED':
+      return <XCircle className="h-4 w-4" />;
+    case 'IN_PROGRESS':
+      return <PlayCircle className="h-4 w-4" />;
+    case 'ON_HOLD':
+      return <PauseCircle className="h-4 w-4" />;
+    case 'COMPLETED':
+      return <CheckCircle2 className="h-4 w-4" />;
+    case 'CANCELLED':
+      return <XCircle className="h-4 w-4" />;
+    default:
+      return null;
+  }
+};
 
 export function WorkflowList({ workflows, loading, onSelect, onRefresh }) {
   const { toast } = useToast();
@@ -32,17 +75,8 @@ export function WorkflowList({ workflows, loading, onSelect, onRefresh }) {
     }
   };
 
-  const getStatusColor = (state) => {
-    switch (state) {
-      case 'INITIAL':
-        return 'bg-blue-100 text-blue-800';
-      case 'IN_PROGRESS':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'COMPLETED':
-        return 'bg-green-100 text-green-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
+  const canProcess = (status) => {
+    return !['COMPLETED', 'CANCELLED'].includes(status);
   };
 
   if (loading) {
@@ -80,8 +114,9 @@ export function WorkflowList({ workflows, loading, onSelect, onRefresh }) {
                 </div>
               </TableCell>
               <TableCell>
-                <span className={`inline-block px-2 py-1 rounded text-sm ${getStatusColor(workflow.state)}`}>
-                  {workflow.state}
+                <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-sm ${STATUS_DISPLAY[workflow.state]?.color || 'bg-gray-100'}`}>
+                  <StatusIcon status={workflow.state} />
+                  {STATUS_DISPLAY[workflow.state]?.text || workflow.state}
                 </span>
               </TableCell>
               <TableCell>
@@ -111,13 +146,15 @@ export function WorkflowList({ workflows, loading, onSelect, onRefresh }) {
                     size="sm"
                     variant="outline"
                     onClick={() => onSelect(workflow)}
+                    title="View Details"
                   >
                     <Info className="h-4 w-4" />
                   </Button>
                   <Button
                     size="sm"
                     onClick={() => processWorkflow(workflow.id)}
-                    disabled={workflow.state === 'COMPLETED'}
+                    disabled={!canProcess(workflow.state)}
+                    title="Process Workflow"
                   >
                     <PlayCircle className="h-4 w-4" />
                   </Button>
