@@ -39,7 +39,7 @@ export const workflowApi = {
     }
   },
 
-  updateWorkflowState: async (workflowId, action, comment) => {
+  processWorkflow: async (workflowId, action, comment) => {
     try {
       const queryParams = new URLSearchParams();
       queryParams.append('action', action);
@@ -47,10 +47,17 @@ export const workflowApi = {
 
       const response = await fetch(`${API_BASE_URL}/api/workflow/${workflowId}/state?${queryParams}`, {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
       });
-      if (!response.ok) throw new Error('Failed to update workflow state');
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || 'Failed to process workflow');
+      }
     } catch (error) {
-      console.error('Update workflow state error:', error);
+      console.error('Process workflow error:', error);
       throw error;
     }
   },

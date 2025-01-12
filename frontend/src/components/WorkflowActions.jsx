@@ -30,10 +30,11 @@ const ACTION_CONFIGS = {
   },
   REJECT: {
     title: '否認確認',
-    message: 'このワークフローを否認してよろしいですか？',
+    message: 'このワークフローを否認してよろしいですか？コメントを入力してください。',
     confirmLabel: '否認',
     icon: Ban,
-    variant: 'destructive'
+    variant: 'destructive',
+    requireComment: true
   },
   START: {
     title: '開始確認',
@@ -51,10 +52,11 @@ const ACTION_CONFIGS = {
   },
   HOLD: {
     title: '保留確認',
-    message: 'このワークフローを保留にしてよろしいですか？',
+    message: 'このワークフローを保留にしてよろしいですか？理由を入力してください。',
     confirmLabel: '保留',
     icon: PauseCircle,
-    variant: 'default'
+    variant: 'default',
+    requireComment: true
   },
   RESUME: {
     title: '再開確認',
@@ -65,17 +67,19 @@ const ACTION_CONFIGS = {
   },
   RESUBMIT: {
     title: '再申請確認',
-    message: 'このワークフローを再申請してよろしいですか？',
+    message: 'このワークフローを再申請してよろしいですか？修正内容を入力してください。',
     confirmLabel: '再申請',
     icon: RotateCcw,
-    variant: 'default'
+    variant: 'default',
+    requireComment: true
   },
   CANCEL: {
     title: '取消確認',
-    message: 'このワークフローを取り消してよろしいですか？',
+    message: 'このワークフローを取り消してよろしいですか？理由を入力してください。',
     confirmLabel: '取消',
     icon: XCircle,
-    variant: 'destructive'
+    variant: 'destructive',
+    requireComment: true
   }
 };
 
@@ -85,22 +89,32 @@ export function WorkflowActions({ workflow, onUpdate }) {
 
   const handleAction = async (comment) => {
     if (!currentAction) return;
+    
+    const config = ACTION_CONFIGS[currentAction];
+    if (config.requireComment && (!comment || comment.trim() === '')) {
+      toast({
+        title: 'エラー',
+        description: 'コメントを入力してください。',
+        variant: 'destructive',
+      });
+      return;
+    }
 
     try {
-      await workflowApi.updateWorkflowState(workflow.id, currentAction, comment);
+      await workflowApi.processWorkflow(workflow.id, currentAction, comment);
       onUpdate();
       toast({
         title: '成功',
-        description: 'ワークフローの状態を更新しました。',
+        description: `ワークフローを${config.confirmLabel}しました。`,
       });
+      setCurrentAction(null);
     } catch (error) {
+      console.error('Action error:', error);
       toast({
         title: 'エラー',
-        description: 'ワークフローの状態更新に失敗しました。',
+        description: `ワークフローの${config.confirmLabel}に失敗しました。`,
         variant: 'destructive',
       });
-    } finally {
-      setCurrentAction(null);
     }
   };
 
@@ -155,6 +169,7 @@ export function WorkflowActions({ workflow, onUpdate }) {
           message={actionConfig.message}
           confirmLabel={actionConfig.confirmLabel}
           variant={actionConfig.variant}
+          requireComment={actionConfig.requireComment}
           onConfirm={handleAction}
         />
       )}
