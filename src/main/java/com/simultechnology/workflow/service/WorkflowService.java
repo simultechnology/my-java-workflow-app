@@ -1,63 +1,68 @@
 package com.simultechnology.workflow.service;
 
-// ... imports は省略 ...
+// ... 既存のインポート文は維持 ...
+import com.simultechnology.workflow.dto.CreateTaskRequest;
 
 @Service
 public class WorkflowService {
-    // ... 既存のフィールドと constructor は省略 ...
+    // ... 既存のフィールドとメソッドは維持 ...
 
     @Transactional
-    public void processWorkflow(String workflowId, String action, String comment) {
-        Workflow workflow = workflowRepository.findById(workflowId)
+    public void assignTask(CreateTaskRequest request) {
+        Workflow workflow = workflowRepository.findById(request.getWorkflowId())
             .orElseThrow(() -> new RuntimeException("Workflow not found"));
+            
+        Employee employee = employeeRepository.findById(request.getEmployeeId())
+            .orElseThrow(() -> new RuntimeException("Employee not found"));
 
-        String oldState = workflow.getCurrentState();
-        String newState;
+        TaskExecution task = new TaskExecution();
+        task.setWorkflow(workflow);
+        task.setEmployee(employee);
+        task.setTaskName(request.getTaskName());
+        task.setTaskDescription(request.getTaskDescription());
+        task.setStartTime(LocalDateTime.now());
+        task.setStatus("PENDING");
 
-        // デフォルトの "PROCEED" アクションの処理
-        if ("PROCEED".equals(action)) {
-            newState = determineNextState(oldState);
-        } else {
-            newState = determineNewState(oldState, action);
-        }
+        workflow.setAssignee(employee);
+        workflow.getTaskExecutions().add(task);
 
-        // 状態遷移を記録
-        StateTransition transition = new StateTransition();
-        transition.setWorkflow(workflow);
-        transition.setFromState(oldState);
-        transition.setToState(newState);
-        transition.setTransitionTime(LocalDateTime.now());
-        stateTransitionRepository.save(transition);
-
-        // ワークフローの状態を更新
-        workflow.setCurrentState(newState);
-        workflow.getStateTransitions().add(transition);
+        taskExecutionRepository.save(task);
         workflowRepository.save(workflow);
-
-        // タスク実行記録を作成（コメントがある場合）
-        if (comment != null && !comment.isEmpty()) {
-            TaskExecution task = new TaskExecution();
-            task.setWorkflow(workflow);
-            task.setTaskName("State transition: " + oldState + " -> " + newState);
-            task.setTaskDescription(action);
-            task.setComments(comment);
-            task.setStartTime(LocalDateTime.now());
-            task.setEndTime(LocalDateTime.now());
-            task.setStatus(newState);
-            taskExecutionRepository.save(task);
-        }
     }
 
-    private String determineNextState(String currentState) {
-        switch (currentState) {
-            case "DRAFT": return "PENDING_APPROVAL";
-            case "PENDING_APPROVAL": return "IN_REVIEW";
-            case "IN_REVIEW": return "IN_PROGRESS";
-            case "IN_PROGRESS": return "COMPLETED";
-            case "REJECTED": return "DRAFT";
-            default: throw new IllegalStateException("Cannot proceed from state: " + currentState);
-        }
+    @Transactional
+    public void completeTask(Long taskId, String comments) {
+        TaskExecution task = taskExecutionRepository.findById(taskId)
+            .orElseThrow(() -> new RuntimeException("Task not found"));
+            
+        task.setEndTime(LocalDateTime.now());
+        task.setStatus("COMPLETED");
+        task.setComments(comments);
+        
+        taskExecutionRepository.save(task);
     }
 
-    // ... その他のメソッドは変更なし ...
+    private TaskExecutionDTO convertToTaskDTO(TaskExecution task) {
+        TaskExecutionDTO dto = new TaskExecutionDTO();
+        dto.setId(task.getId());
+        dto.setWorkflowId(task.getWorkflow().getId());
+        dto.setTaskName(task.getTaskName());
+        dto.setTaskDescription(task.getTaskDescription());
+        dto.setStartTime(task.getStartTime());
+        dto.setEndTime(task.getEndTime());
+        dto.setStatus(task.getStatus());
+        dto.setComments(task.getComments());
+
+        if (task.getEmployee() != null) {
+            EmployeeDTO employeeDTO = new EmployeeDTO();
+            employeeDTO.setId(task.getEmployee().getId());
+            employeeDTO.setName(task.getEmployee().getName());
+            employeeDTO.setDepartment(task.getEmployee().getDepartment());
+            dto.setEmployee(employeeDTO);
+        }
+
+        return dto;
+    }
+
+    // ... 他の既存のメソッドは維持 ...
 }

@@ -1,7 +1,6 @@
 package com.simultechnology.workflow.controller;
 
 import com.simultechnology.workflow.dto.CreateTaskRequest;
-import com.simultechnology.workflow.dto.TaskExecutionDTO;
 import com.simultechnology.workflow.service.WorkflowService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,15 +16,23 @@ public class TaskController {
 
     @PostMapping("/assign")
     public ResponseEntity<Void> assignTask(@RequestBody CreateTaskRequest request) {
-        workflowService.assignTask(request);
-        return ResponseEntity.ok().build();
+        try {
+            workflowService.assignTask(request);
+            return ResponseEntity.ok().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @PostMapping("/{taskId}/complete")
     public ResponseEntity<Void> completeTask(
             @PathVariable Long taskId,
             @RequestParam String comments) {
-        workflowService.completeTask(taskId, comments);
-        return ResponseEntity.ok().build();
+        try {
+            workflowService.completeTask(taskId, comments);
+            return ResponseEntity.ok().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 }
