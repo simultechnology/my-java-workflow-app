@@ -39,7 +39,7 @@ export const workflowApi = {
     }
   },
 
-  processWorkflow: async (workflowId, action, comment) => {
+  processWorkflow: async (workflowId, action = 'PROCEED', comment = '') => {
     try {
       const queryParams = new URLSearchParams();
       queryParams.append('action', action);

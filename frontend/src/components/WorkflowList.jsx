@@ -17,9 +17,11 @@ import {
   PlayCircle,
   PauseCircle,
   CheckCircle2,
-  RefreshCcw 
+  RefreshCcw,
+  ArrowRight
 } from 'lucide-react';
 import { useToast } from './ui/use-toast';
+import { workflowApi } from '../services/api';
 
 const STATUS_DISPLAY = {
   'DRAFT': { text: '下書き', color: 'bg-gray-100 text-gray-800', icon: FileEdit },
@@ -34,6 +36,23 @@ const STATUS_DISPLAY = {
 
 export function WorkflowList({ workflows, loading, onSelect, onRefresh }) {
   const { toast } = useToast();
+
+  const processWorkflow = async (workflowId) => {
+    try {
+      await workflowApi.processWorkflow(workflowId);
+      onRefresh();
+      toast({
+        title: '成功',
+        description: 'ワークフローを進めました',
+      });
+    } catch (error) {
+      toast({
+        title: 'エラー',
+        description: 'ワークフローの処理に失敗しました',
+        variant: 'destructive',
+      });
+    }
+  };
 
   if (loading) {
     return <div className="text-center py-4">Loading...</div>;
@@ -99,21 +118,31 @@ export function WorkflowList({ workflows, loading, onSelect, onRefresh }) {
                 )}
               </TableCell>
               <TableCell>{new Date(workflow.createdAt).toLocaleString()}</TableCell>
-              <TableCell className="space-y-2">
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => onSelect(workflow)}
-                    title="詳細を表示"
-                  >
-                    <Info className="h-4 w-4" />
-                  </Button>
+              <TableCell>
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => onSelect(workflow)}
+                      title="詳細を表示"
+                    >
+                      <Info className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => processWorkflow(workflow.id)}
+                      disabled={workflow.state === 'COMPLETED' || workflow.state === 'CANCELLED' || workflow.state === 'ON_HOLD'}
+                      title="進捗を進める"
+                    >
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <WorkflowActions
+                    workflow={workflow}
+                    onUpdate={onRefresh}
+                  />
                 </div>
-                <WorkflowActions
-                  workflow={workflow}
-                  onUpdate={onRefresh}
-                />
               </TableCell>
             </TableRow>
           ))}
