@@ -140,6 +140,7 @@ public class WorkflowService {
 
     private String determineNextState(String currentState) {
         switch (currentState) {
+            case "INITIAL": return "DRAFT";
             case "DRAFT": return "PENDING_APPROVAL";
             case "PENDING_APPROVAL": return "IN_REVIEW";
             case "IN_REVIEW": return "IN_PROGRESS";
