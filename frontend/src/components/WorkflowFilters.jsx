@@ -31,14 +31,14 @@ export function WorkflowFilters({ filters, onFilterChange, onReset }) {
       <div className="flex flex-wrap gap-4">
         <div className="w-64">
           <Select
-            value={filters.status || ''}
-            onValueChange={(value) => handleChange('status', value)}
+            value={filters.status || 'ALL'}
+            onValueChange={(value) => handleChange('status', value === 'ALL' ? '' : value)}
           >
             <SelectTrigger>
               <SelectValue placeholder="ステータスで絞り込み" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">すべてのステータス</SelectItem>
+              <SelectItem value="ALL">全てのステータス</SelectItem>
               {STATUS_OPTIONS.map(option => (
                 <SelectItem key={option.value} value={option.value}>
                   {option.label}
@@ -50,14 +50,14 @@ export function WorkflowFilters({ filters, onFilterChange, onReset }) {
 
         <div className="w-64">
           <Select
-            value={filters.assigneeId || ''}
-            onValueChange={(value) => handleChange('assigneeId', value)}
+            value={filters.assigneeId || 'ALL'}
+            onValueChange={(value) => handleChange('assigneeId', value === 'ALL' ? '' : value)}
           >
             <SelectTrigger>
               <SelectValue placeholder="担当者で絞り込み" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">すべての担当者</SelectItem>
+              <SelectItem value="ALL">全ての担当者</SelectItem>
               {filters.employees?.map(employee => (
                 <SelectItem key={employee.id} value={employee.id.toString()}>
                   {employee.name} ({employee.department})
