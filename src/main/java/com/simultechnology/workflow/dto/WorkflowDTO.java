@@ -17,11 +17,3 @@ public class WorkflowDTO {
     private List<StateTransitionDTO> transitions;
     private List<TaskExecutionDTO> taskExecutions;
 }
-
-@Data
-class StateTransitionDTO {
-    private Long id;
-    private String fromState;
-    private String toState;
-    private LocalDateTime transitionTime;
-}
