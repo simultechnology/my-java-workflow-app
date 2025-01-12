@@ -16,14 +16,44 @@ public class WorkflowController {
         this.workflowService = workflowService;
     }
 
+    @GetMapping("/list")
+    public ResponseEntity<Page<WorkflowDTO>> listWorkflows(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Long assigneeId,
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate,
+            Pageable pageable) {
+        return ResponseEntity.ok(workflowService.getAllWorkflows(pageable));
+    }
+
+    @PostMapping
+    public ResponseEntity<String> createWorkflow(@RequestBody CreateWorkflowRequest request) {
+        String workflowId = workflowService.createWorkflow(
+            request.getCreatorId(),
+            request.getTitle(),
+            request.getDescription()
+        );
+        return ResponseEntity.ok(workflowId);
+    }
+
     @PostMapping("/{workflowId}/state")
-    public ResponseEntity<Void> updateWorkflowState(
+    public ResponseEntity<Void> processWorkflow(
             @PathVariable String workflowId,
             @RequestParam String action,
             @RequestParam(required = false) String comment) {
-        workflowService.updateWorkflowState(workflowId, action, comment);
-        return ResponseEntity.ok().build();
+        try {
+            workflowService.processWorkflow(workflowId, action, comment);
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
-    // 既存のエンドポイントは省略...
+    @GetMapping("/{workflowId}")
+    public ResponseEntity<WorkflowDTO> getWorkflowDetails(@PathVariable String workflowId) {
+        WorkflowDTO workflow = workflowService.getWorkflowDetails(workflowId);
+        return ResponseEntity.ok(workflow);
+    }
 }

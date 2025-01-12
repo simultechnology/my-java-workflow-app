@@ -8,76 +8,32 @@ import {
   TableRow,
 } from './ui/table';
 import { Button } from './ui/button';
+import { WorkflowActions } from './WorkflowActions';
 import { 
-  PlayCircle, 
   Info, 
-  RefreshCcw, 
+  FileEdit,
+  AlarmClock,
+  XCircle,
+  PlayCircle,
   PauseCircle,
   CheckCircle2,
-  XCircle,
-  AlarmClock,
-  FileEdit
+  RefreshCcw 
 } from 'lucide-react';
 import { useToast } from './ui/use-toast';
-import { workflowApi } from '../services/api';
 
 const STATUS_DISPLAY = {
-  'DRAFT': { text: '下書き', color: 'bg-gray-100 text-gray-800' },
-  'PENDING_APPROVAL': { text: '承認待ち', color: 'bg-yellow-100 text-yellow-800' },
-  'IN_REVIEW': { text: 'レビュー中', color: 'bg-purple-100 text-purple-800' },
-  'REJECTED': { text: '差し戻し', color: 'bg-red-100 text-red-800' },
-  'IN_PROGRESS': { text: '処理中', color: 'bg-blue-100 text-blue-800' },
-  'ON_HOLD': { text: '保留中', color: 'bg-orange-100 text-orange-800' },
-  'COMPLETED': { text: '完了', color: 'bg-green-100 text-green-800' },
-  'CANCELLED': { text: '取消', color: 'bg-gray-100 text-gray-800' }
-};
-
-const StatusIcon = ({ status }) => {
-  switch (status) {
-    case 'DRAFT':
-      return <FileEdit className="h-4 w-4" />;
-    case 'PENDING_APPROVAL':
-      return <AlarmClock className="h-4 w-4" />;
-    case 'IN_REVIEW':
-      return <Info className="h-4 w-4" />;
-    case 'REJECTED':
-      return <XCircle className="h-4 w-4" />;
-    case 'IN_PROGRESS':
-      return <PlayCircle className="h-4 w-4" />;
-    case 'ON_HOLD':
-      return <PauseCircle className="h-4 w-4" />;
-    case 'COMPLETED':
-      return <CheckCircle2 className="h-4 w-4" />;
-    case 'CANCELLED':
-      return <XCircle className="h-4 w-4" />;
-    default:
-      return null;
-  }
+  'DRAFT': { text: '下書き', color: 'bg-gray-100 text-gray-800', icon: FileEdit },
+  'PENDING_APPROVAL': { text: '承認待ち', color: 'bg-yellow-100 text-yellow-800', icon: AlarmClock },
+  'IN_REVIEW': { text: 'レビュー中', color: 'bg-purple-100 text-purple-800', icon: Info },
+  'REJECTED': { text: '差し戻し', color: 'bg-red-100 text-red-800', icon: XCircle },
+  'IN_PROGRESS': { text: '処理中', color: 'bg-blue-100 text-blue-800', icon: PlayCircle },
+  'ON_HOLD': { text: '保留中', color: 'bg-orange-100 text-orange-800', icon: PauseCircle },
+  'COMPLETED': { text: '完了', color: 'bg-green-100 text-green-800', icon: CheckCircle2 },
+  'CANCELLED': { text: '取消', color: 'bg-gray-100 text-gray-800', icon: XCircle }
 };
 
 export function WorkflowList({ workflows, loading, onSelect, onRefresh }) {
   const { toast } = useToast();
-
-  const processWorkflow = async (workflowId) => {
-    try {
-      await workflowApi.processWorkflow(workflowId);
-      onRefresh();
-      toast({
-        title: 'Success',
-        description: 'Workflow processed successfully',
-      });
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to process workflow',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const canProcess = (status) => {
-    return !['COMPLETED', 'CANCELLED'].includes(status);
-  };
 
   if (loading) {
     return <div className="text-center py-4">Loading...</div>;
@@ -89,7 +45,7 @@ export function WorkflowList({ workflows, loading, onSelect, onRefresh }) {
         <h2 className="text-lg font-semibold">Workflows</h2>
         <Button variant="outline" onClick={onRefresh} className="flex items-center gap-2">
           <RefreshCcw className="h-4 w-4" />
-          Refresh
+          更新
         </Button>
       </div>
       
@@ -115,7 +71,10 @@ export function WorkflowList({ workflows, loading, onSelect, onRefresh }) {
               </TableCell>
               <TableCell>
                 <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-sm ${STATUS_DISPLAY[workflow.state]?.color || 'bg-gray-100'}`}>
-                  <StatusIcon status={workflow.state} />
+                  {(() => {
+                    const Icon = STATUS_DISPLAY[workflow.state]?.icon;
+                    return Icon && <Icon className="h-4 w-4" />;
+                  })()}
                   {STATUS_DISPLAY[workflow.state]?.text || workflow.state}
                 </span>
               </TableCell>
@@ -140,28 +99,31 @@ export function WorkflowList({ workflows, loading, onSelect, onRefresh }) {
                 )}
               </TableCell>
               <TableCell>{new Date(workflow.createdAt).toLocaleString()}</TableCell>
-              <TableCell>
+              <TableCell className="space-y-2">
                 <div className="flex gap-2">
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={() => onSelect(workflow)}
-                    title="View Details"
+                    title="詳細を表示"
                   >
                     <Info className="h-4 w-4" />
                   </Button>
-                  <Button
-                    size="sm"
-                    onClick={() => processWorkflow(workflow.id)}
-                    disabled={!canProcess(workflow.state)}
-                    title="Process Workflow"
-                  >
-                    <PlayCircle className="h-4 w-4" />
-                  </Button>
                 </div>
+                <WorkflowActions
+                  workflow={workflow}
+                  onUpdate={onRefresh}
+                />
               </TableCell>
             </TableRow>
           ))}
+          {workflows.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                ワークフローがありません
+              </TableCell>
+            </TableRow>
+          )}
         </TableBody>
       </Table>
     </div>
